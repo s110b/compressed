@@ -21,11 +21,11 @@ jobs:
       - name: Build and Run Squoosh Docker Container
         run: |
           docker build -t squoosh-container .
-          docker run -v ${{ github.workspace }}/origin:/app/images -it squoosh-container \
+          docker run -v ${{ github.workspace }}/origin:/app/input_images -v ${{ github.workspace }}/thumb:/app/output_images -it squoosh-container \
             --resize '{ "width": 800, "height": 600, "method": "fit" }' \
             --mozjpeg '{"quality": 75}' \
             --webp '{"quality": 75}' \
-            -d /app/images/thumb /app/images/
+            -d /app/output_images /app/input_images/
         env:
           DOCKER_CLI_AGGREGATE_OUTPUT: 1
 
