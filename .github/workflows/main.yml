@@ -1,0 +1,45 @@
+name: Image Compression
+
+on:
+  push:
+    branches:
+      - main  # 您可以根据需要更改分支名称
+
+jobs:
+  image_compress_job:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Set up Docker
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'  # 使用适当的 Python 版本
+
+      - name: Build and Run Squoosh Docker Container
+        run: |
+          docker build -t squoosh-container .
+          docker run -v ${{ github.workspace }}/origin:/app/images -it squoosh-container \
+            --resize '{ "width": 800, "height": 600, "method": "fit" }' \
+            --mozjpeg '{"quality": 75}' \
+            --webp '{"quality": 75}' \
+            -d /app/images/thumb /app/images/
+        env:
+          DOCKER_CLI_AGGREGATE_OUTPUT: 1
+
+      - name: Copy Compressed Images to Directory
+        run: |
+          mkdir -p ${{ github.workspace }}/thumb
+          cp -r ${{ github.workspace }}/origin ${{ github.workspace }}/thumb
+
+      - name: Commit and Push Compressed Images
+        run: |
+          git config user.name "${{ github.actor }}"
+          git config user.email "${{ github.actor }}@users.noreply.github.com"
+          git add thumb
+          git commit -m "Add compressed images"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
